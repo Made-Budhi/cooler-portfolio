@@ -10,6 +10,7 @@ import { Hero } from '@/features/hero/Hero'
 import { ProjectModalProvider } from '@/features/project-detail/ProjectModalContext'
 import { Skills } from '@/features/skills/Skills'
 import { Work } from '@/features/work/Work'
+import { Analytics } from '@vercel/analytics/react';
 
 /**
  * Composition root. The page is a single vertical scroll; each section is a
@@ -17,21 +18,24 @@ import { Work } from '@/features/work/Work'
  * the narrative: who → what → archive → background → how to reach me.
  */
 export function App() {
-  return (
-    <ProjectModalProvider>
-      <Cursor />
-      <Navbar />
-      <main>
-        <Hero />
-        <CapabilityStrip />
-        <Work />
-        <Gallery />
-        <About />
-        <Experience />
-        <Skills />
-        <Contact />
-      </main>
-      <Footer />
-    </ProjectModalProvider>
+  return(
+    <>
+      <ProjectModalProvider>
+        <Cursor />
+        <Navbar />
+        <main>
+          <Hero />
+          <CapabilityStrip />
+          <Work />
+          <Gallery />
+          <About />
+          <Experience />
+          <Skills />
+          <Contact />
+        </main>
+        <Footer />
+      </ProjectModalProvider>
+      <Analytics />
+    </>
   )
 }
