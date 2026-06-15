@@ -15,6 +15,8 @@ interface ProjectCoverProps {
   bare?: boolean
   /** Render the rotating 3D artifact over the orb (lazy-loaded three.js). */
   artifact?: boolean
+  /** Artifact render quality — 'low' for the many small gallery tiles. */
+  artifactQuality?: 'high' | 'low'
 }
 
 /**
@@ -29,6 +31,7 @@ export function ProjectCover({
   compact = false,
   bare = false,
   artifact = false,
+  artifactQuality = 'high',
 }: ProjectCoverProps) {
   const imgRef = useRef<HTMLImageElement>(null)
   const [loaded, setLoaded] = useState(false)
@@ -54,7 +57,11 @@ export function ProjectCover({
 
       {artifact && (
         <Suspense fallback={null}>
-          <ProjectArtifact project={project} className="pointer-events-none absolute inset-0 z-[1]" />
+          <ProjectArtifact
+            project={project}
+            quality={artifactQuality}
+            className="pointer-events-none absolute inset-0 z-[1]"
+          />
         </Suspense>
       )}
 

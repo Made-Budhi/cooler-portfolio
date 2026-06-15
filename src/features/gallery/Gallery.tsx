@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 
 import { projects } from '@/data/projects'
@@ -8,109 +8,117 @@ import { clamp, lerp } from '@/lib/math'
 
 import { ProjectCover } from './ProjectCover'
 
-interface DragApi {
-  /** Measure an element's rect with the velocity-skew removed (accurate FLIP origin). */
-  measure: (el: HTMLElement) => DOMRect
-  /** Nudge the strip so a (possibly off-screen) tile becomes visible — for keyboard focus. */
-  reveal: (el: HTMLElement) => void
-}
+/** Two copies of the project set make the loop seamless (one always fills the viewport). */
+const COPIES = 2
+const loopTiles = Array.from({ length: COPIES }).flatMap(() => projects)
+
+const MAX_ANGLE = 34 // deg of inward rotation at the edges
+const DEPTH = 200 // px the edges recede
 
 /**
- * A draggable, momentum-based project gallery — inspired by phantom.land's
- * tactile work index. Grab and fling the strip, scroll it sideways, drag the
- * scrollbar to scrub, or tap / keyboard-activate a tile to open its case study.
- * Velocity drives a smoothed skew so the strip wobbles as it moves and settles.
- *
- * Interaction is pointer-event based with NO setPointerCapture: a press opens
- * the tile on pointerup if it never crossed the drag threshold, otherwise it's
- * a drag. State resets on every press, so a missed pointerup can't wedge it.
+ * A curved, infinite, momentum-based gallery — a panoramic "360" arc of project
+ * covers (inspired by curved architecture-studio galleries). Drag, fling, or
+ * scroll sideways; it loops forever and drifts gently on its own. Each tile is
+ * rotated toward the center on a perspective curve, and (on desktop) carries
+ * its rotating 3D artifact. Tap / keyboard-activate a tile to open its study.
  */
 export function Gallery() {
   const { open } = useProjectModal()
   const reduced = usePrefersReducedMotion()
   const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-  const scrollbarRef = useRef<HTMLDivElement>(null)
-  const thumbRef = useRef<HTMLDivElement>(null)
-  const apiRef = useRef<DragApi | null>(null)
+  const [showArtifact, setShowArtifact] = useState(false)
 
-  // Always-fresh opener the rAF/event closures can call without stale state.
+  // Only run the per-tile WebGL artifacts where there's GPU headroom.
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px) and (pointer: fine)')
+    const apply = () => setShowArtifact(mql.matches && !reduced)
+    apply()
+    mql.addEventListener('change', apply)
+    return () => mql.removeEventListener('change', apply)
+  }, [reduced])
+
   const openRef = useRef<(tileEl: HTMLElement) => void>(() => {})
   openRef.current = (tileEl: HTMLElement) => {
     const id = tileEl.dataset.projectId
     const project = id ? projects.find((p) => p.id === id) : undefined
     if (!project) return
     const media = (tileEl.querySelector('[data-media]') as HTMLElement | null) ?? tileEl
-    const rect = apiRef.current ? apiRef.current.measure(media) : media.getBoundingClientRect()
-    open(project, rect)
+    open(project, media.getBoundingClientRect())
   }
 
   useEffect(() => {
     const viewport = viewportRef.current
     const track = trackRef.current
-    const scrollbar = scrollbarRef.current
-    const thumb = thumbRef.current
-    if (!viewport || !track || !scrollbar || !thumb) return
+    if (!viewport || !track) return
 
-    let min = 0 // furthest-left offset (negative)
-    let target = 0
+    const tileEls = Array.from(track.children) as HTMLElement[]
+    let centers: number[] = []
+    let setWidth = 0
+    let offset = 0
     let current = 0
-    let previous = 0
-    let skew = 0
     let pointerActive = false
     let dragging = false
-    let scrubbing = false
     let activePointer: number | null = null
-    let pointerStart = 0
-    let targetStart = 0
     let lastPointer = 0
     let velocity = 0
-    let downX = 0
-    let downY = 0
+    let startX = 0
     let downTile: HTMLElement | null = null
-    let driftRemaining = reduced ? 0 : 150 // px of one-time intro nudge
     let visible = true
     let raf = 0
 
     const DRAG_THRESHOLD = 8
+    const drift = reduced ? 0 : 0.18 // px/frame ambient rotation
 
     const measure = () => {
-      min = Math.min(0, viewport.clientWidth - track.scrollWidth)
-      target = clamp(target, min, 0)
-      scrollbar.dataset.hidden = String(min === 0)
-      track.classList.toggle('is-centered', min === 0)
+      centers = tileEls.map((el) => el.offsetLeft + el.offsetWidth / 2)
+      // Distance between a tile and its copy = exactly one set width.
+      setWidth = tileEls.length > projects.length ? tileEls[projects.length].offsetLeft - tileEls[0].offsetLeft : 0
+    }
+
+    // Manual hit-test: native click/hover is unreliable through the 3D-curved
+    // tiles, so find the tile whose projected rect contains the point.
+    const tileAt = (x: number, y: number): HTMLElement | null => {
+      let best: HTMLElement | null = null
+      let bestDist = Infinity
+      for (const el of tileEls) {
+        const r = el.getBoundingClientRect()
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+          const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2))
+          if (d < bestDist) {
+            bestDist = d
+            best = el
+          }
+        }
+      }
+      return best
     }
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return
-      if (pointerActive && event.pointerId !== activePointer) return // ignore extra pointers
+      if (pointerActive && event.pointerId !== activePointer) return
       pointerActive = true
       dragging = false
       activePointer = event.pointerId
-      driftRemaining = 0
-      pointerStart = event.clientX
       lastPointer = event.clientX
-      targetStart = target
+      startX = event.clientX
       velocity = 0
-      downX = event.clientX
-      downY = event.clientY
-      downTile = (event.target as Element | null)?.closest<HTMLElement>('[data-project-id]') ?? null
+      downTile = tileAt(event.clientX, event.clientY) // the aimed tile
     }
-
     const onPointerMove = (event: PointerEvent) => {
       if (!pointerActive || event.pointerId !== activePointer) return
-      const dx = event.clientX - pointerStart
-      if (!dragging && Math.abs(dx) > DRAG_THRESHOLD) {
+      const dx = event.clientX - lastPointer
+      lastPointer = event.clientX
+      if (!dragging && Math.abs(event.clientX - startX) > DRAG_THRESHOLD) {
         dragging = true
+        downTile = null // it's a drag, not a tap
         viewport.classList.add('is-dragging')
       }
       if (dragging) {
-        target = clamp(targetStart + dx, min - 90, 90) // small rubber-band past edges
-        velocity = event.clientX - lastPointer
+        offset -= dx
+        velocity = -dx
       }
-      lastPointer = event.clientX
     }
-
     const onPointerUp = (event: PointerEvent) => {
       if (!pointerActive || event.pointerId !== activePointer) return
       pointerActive = false
@@ -118,64 +126,16 @@ export function Gallery() {
       if (dragging) {
         dragging = false
         viewport.classList.remove('is-dragging')
-        target = clamp(target + velocity * 9, min, 0) // fling, then snap into bounds
-      } else {
-        // It was a tap, not a drag — open the tile.
-        const moved = Math.hypot(event.clientX - downX, event.clientY - downY)
-        if (downTile && moved < 10) openRef.current(downTile)
+        offset += velocity * 12 // fling
+      } else if (downTile) {
+        openRef.current(downTile) // it was a tap on this tile
       }
       downTile = null
     }
-
     const onWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || min === 0) return
-      const next = clamp(target - event.deltaX, min, 0)
-      if (next === target) return // already at the edge — let the page scroll
-      target = next
-      driftRemaining = 0
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return
+      offset += event.deltaX
       event.preventDefault()
-    }
-
-    // --- Scrollbar scrubbing ---
-    const scrubTo = (clientX: number) => {
-      if (min === 0) return
-      const rect = scrollbar.getBoundingClientRect()
-      const frac = clamp((clientX - rect.left) / rect.width, 0, 1)
-      target = frac * min
-    }
-    const onScrubDown = (event: PointerEvent) => {
-      if (min === 0) return
-      scrubbing = true
-      driftRemaining = 0
-      try {
-        scrollbar.setPointerCapture(event.pointerId)
-      } catch {
-        /* ignore */
-      }
-      scrubTo(event.clientX)
-    }
-    const onScrubMove = (event: PointerEvent) => {
-      if (scrubbing) scrubTo(event.clientX)
-    }
-    const onScrubUp = () => {
-      scrubbing = false
-    }
-
-    apiRef.current = {
-      measure: (el) => {
-        track.style.transform = `translate3d(${current}px, 0, 0)`
-        return el.getBoundingClientRect()
-      },
-      reveal: (el) => {
-        driftRemaining = 0
-        const vp = viewport.getBoundingClientRect()
-        const er = el.getBoundingClientRect()
-        const pad = 32
-        let delta = 0
-        if (er.left < vp.left + pad) delta = vp.left + pad - er.left
-        else if (er.right > vp.right - pad) delta = vp.right - pad - er.right
-        if (delta !== 0) target = clamp(target + delta, min, 0)
-      },
     }
 
     measure()
@@ -195,40 +155,37 @@ export function Gallery() {
     window.addEventListener('pointerup', onPointerUp)
     window.addEventListener('pointercancel', onPointerUp)
     viewport.addEventListener('wheel', onWheel, { passive: false })
-    scrollbar.addEventListener('pointerdown', onScrubDown)
-    scrollbar.addEventListener('pointermove', onScrubMove)
-    scrollbar.addEventListener('pointerup', onScrubUp)
-    scrollbar.addEventListener('pointercancel', onScrubUp)
 
     const render = () => {
       raf = requestAnimationFrame(render)
-      if (!visible) return
-      if (driftRemaining > 0 && !pointerActive && !scrubbing) {
-        const step = 0.4
-        target = clamp(target - step, min, 0)
-        driftRemaining = target <= min ? 0 : driftRemaining - step
+      if (!visible || setWidth === 0) return
+      if (!pointerActive) offset += drift
+      current = lerp(current, offset, dragging ? 0.2 : 0.08)
+      // Seamless loop: keep current in [0, setWidth) and shift offset with it.
+      while (current >= setWidth) {
+        current -= setWidth
+        offset -= setWidth
       }
-      current = lerp(current, target, dragging || scrubbing ? 0.22 : 0.09)
-      const delta = current - previous
-      previous = current
-      // Velocity-driven skew, smoothed so the strip wobbles as it moves and settles.
-      const targetSkew = reduced ? 0 : clamp(delta * 0.32, -12, 12)
-      skew = lerp(skew, targetSkew, 0.16)
-      track.style.transform = `translate3d(${current}px, 0, 0) skewX(${skew}deg)`
+      while (current < 0) {
+        current += setWidth
+        offset += setWidth
+      }
+      track.style.transform = `translate3d(${-current}px, 0, 0)`
 
-      // Sync the scrollbar thumb.
-      if (min < 0) {
-        const widthPct = clamp(viewport.clientWidth / track.scrollWidth, 0.06, 1) * 100
-        const progress = clamp(current / min, 0, 1)
-        thumb.style.width = `${widthPct}%`
-        thumb.style.left = `${progress * (100 - widthPct)}%`
+      const vpCenter = viewport.clientWidth / 2
+      for (let i = 0; i < tileEls.length; i++) {
+        const dx = clamp((centers[i] - current - vpCenter) / vpCenter, -1.5, 1.5)
+        const rotateY = -dx * MAX_ANGLE
+        const tz = -Math.abs(dx) * DEPTH
+        const el = tileEls[i]
+        el.style.transform = `translateZ(${tz}px) rotateY(${rotateY}deg)`
+        el.style.opacity = String(clamp(1 - Math.abs(dx) * 0.4, 0.25, 1))
       }
     }
     raf = requestAnimationFrame(render)
 
     return () => {
       cancelAnimationFrame(raf)
-      apiRef.current = null
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
       viewport.removeEventListener('pointerdown', onPointerDown)
@@ -236,10 +193,6 @@ export function Gallery() {
       window.removeEventListener('pointerup', onPointerUp)
       window.removeEventListener('pointercancel', onPointerUp)
       viewport.removeEventListener('wheel', onWheel)
-      scrollbar.removeEventListener('pointerdown', onScrubDown)
-      scrollbar.removeEventListener('pointermove', onScrubMove)
-      scrollbar.removeEventListener('pointerup', onScrubUp)
-      scrollbar.removeEventListener('pointercancel', onScrubUp)
     }
   }, [reduced])
 
@@ -260,60 +213,57 @@ export function Gallery() {
             <span>The Archive</span>
           </div>
           <h2 className="mt-5 font-display text-[clamp(2.4rem,6vw,4.6rem)] font-medium leading-[0.98] tracking-[-0.02em]">
-            Drag through
+            A panorama
             <br />
-            <em className="font-normal italic text-accent">the work.</em>
+            <em className="font-normal italic text-accent">of the work.</em>
           </h2>
         </div>
         <p className="max-w-xs leading-relaxed text-paper/55 md:text-right">
-          A hands-on index — drag, fling, or scrub the bar below. Tap any project for the full case
-          study.
+          An endless, curved reel — drag, fling, or scroll sideways. Tap any project for the full
+          case study.
         </p>
       </div>
 
-      <div
-        ref={viewportRef}
-        className="dg-viewport mt-12 md:mt-16"
-        role="group"
-        aria-label="Project gallery — drag to explore"
-      >
-        <div ref={trackRef} className="dg-track gap-4 px-5 md:gap-6 md:px-10">
-          {projects.map((project) => (
+      <div ref={viewportRef} className="dg-viewport mt-12 md:mt-16" role="group" aria-label="Project gallery — drag to explore">
+        <div ref={trackRef} className="dg-track gap-5 md:gap-7">
+          {loopTiles.map((project, i) => (
             <article
-              key={project.id}
+              key={`${project.id}-${i}`}
               data-project-id={project.id}
               role="button"
-              tabIndex={0}
+              tabIndex={i < projects.length ? 0 : -1}
+              aria-hidden={i >= projects.length}
               aria-label={`Open case study: ${project.title}`}
               onKeyDown={handleTileKey}
-              onFocus={(event) => apiRef.current?.reveal(event.currentTarget)}
               data-hover
-              className="dg-tile group w-[54vw] shrink-0 cursor-pointer rounded outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-night sm:w-[34vw] md:w-[25vw] lg:w-[18vw] xl:w-[15vw]"
+              className="dg-tile group w-[80vw] shrink-0 cursor-pointer sm:w-[50vw] md:w-[36vw] lg:w-[27vw]"
             >
               {/* Meta — above the image */}
-              <div className="mb-2 flex items-center justify-between font-mono text-[0.54rem] uppercase tracking-[0.14em] text-paper/50">
-                <span className="truncate pr-2">{project.index}</span>
-                <span className="shrink-0">{project.year}</span>
+              <div className="mb-2.5 flex items-center justify-between font-mono text-[0.58rem] uppercase tracking-[0.16em] text-paper/50">
+                <span>{project.index}</span>
+                <span>{project.year}</span>
               </div>
 
-              {/* Image — its own box */}
-              <div data-media className="relative overflow-hidden rounded">
+              {/* Image */}
+              <div data-media className="relative aspect-[4/3] overflow-hidden rounded">
                 <ProjectCover
                   project={project}
                   bare
-                  className="aspect-[4/3] w-full transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                  artifact={showArtifact}
+                  artifactQuality="low"
+                  className="absolute inset-0 h-full w-full"
                 />
-                <span className="pointer-events-none absolute right-2.5 top-2.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-paper/90 text-ink opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <span aria-hidden className="text-sm">↗</span>
+                <span className="pointer-events-none absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-paper/90 text-ink opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <span aria-hidden>↗</span>
                 </span>
               </div>
 
               {/* Meta — below the image */}
-              <div className="mt-2.5">
-                <h3 className="font-display text-base leading-tight transition-colors group-hover:text-accent md:text-lg">
+              <div className="mt-3">
+                <h3 className="font-display text-lg leading-tight transition-colors group-hover:text-accent md:text-xl">
                   {project.title}
                 </h3>
-                <p className="mt-1.5 font-mono text-[0.54rem] uppercase tracking-[0.12em] text-paper/45">
+                <p className="mt-1.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-paper/45">
                   {project.category}
                 </p>
               </div>
@@ -322,16 +272,11 @@ export function Gallery() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 max-w-[1640px] px-5 md:px-10">
-        <div ref={scrollbarRef} className="dg-scrollbar">
-          <div ref={thumbRef} className="dg-thumb" />
-        </div>
-        <div className="mt-4 flex items-center justify-between label text-paper/45">
-          <span className="flex items-center gap-2">
-            <span aria-hidden>←</span> Drag · scrub <span aria-hidden>→</span>
-          </span>
-          <span>{projects.length} projects · 2023 — 2026</span>
-        </div>
+      <div className="mx-auto mt-12 flex max-w-[1640px] items-center justify-between px-5 label text-paper/45 md:px-10">
+        <span className="flex items-center gap-2">
+          <span aria-hidden>←</span> Drag <span aria-hidden>→</span>
+        </span>
+        <span>{projects.length} projects · 2023 — 2026</span>
       </div>
     </section>
   )

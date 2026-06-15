@@ -1,11 +1,12 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
 import type { ReactNode } from 'react'
 import type { Group } from 'three'
 
 import type { Project } from '@/types'
 
-type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid'
+type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid' | 'git-tree' | 'cloud'
 
 interface ArtifactSpec {
   shape: ArtifactShape
@@ -22,10 +23,10 @@ interface ArtifactSpec {
  * - broom-project     → stacked boxes (rooms in a building)
  */
 const ARTIFACTS: Record<string, ArtifactSpec> = {
-  'auto-code-review': { shape: 'icosahedron', color: '#6f8cff', speed: 0.4 },
-  'private-cloud-service': { shape: 'cubes', color: '#fb7a9a', speed: 0.35 },
+  'auto-code-review': { shape: 'git-tree', color: '#6f8cff', speed: 0.4 },
+  'private-cloud-service': { shape: 'cloud', color: '#fb7a9a', speed: 0.1 },
   'bali-school-kids': { shape: 'torus', color: '#bf6bf0', speed: 0.5 },
-  'sidewi-bali': { shape: 'dodecahedron', color: '#6fcfc6', speed: 0.4 },
+  'sidewi-bali': { shape: 'cubes', color: '#6fcfc6', speed: 0.4 },
   'broom-project': { shape: 'roomgrid', color: '#f7b15a', speed: 0.35 },
 }
 
@@ -37,6 +38,83 @@ function Material({ color }: { color: string }) {
 
 function Shape({ shape, color }: { shape: ArtifactShape; color: string }) {
   switch (shape) {
+    case 'git-tree':
+      return (
+        <group>
+          {/* Main Branch Base Commit */}
+          <mesh position={[-0.3, -0.6, 0]}>
+            <sphereGeometry args={[0.18, 24, 24]} />
+            <Material color={color} />
+          </mesh>
+          
+          {/* Main Branch Top Commit */}
+          <mesh position={[-0.3, 0.6, 0]}>
+            <sphereGeometry args={[0.18, 24, 24]} />
+            <Material color={color} />
+          </mesh>
+
+          {/* Feature Branch (The "PR" Commit being reviewed) */}
+          <mesh position={[0.4, 0, 0]}>
+            <sphereGeometry args={[0.22, 24, 24]} />
+            {/* Using a bright contrasting metal for the "AI Review" node to make it pop */}
+            <meshStandardMaterial color="#ffffff" roughness={0.1} metalness={0.9} />
+          </mesh>
+
+          {/* Vertical Main Branch Line */}
+          <mesh position={[-0.3, 0, 0]}>
+            <cylinderGeometry args={[0.06, 0.06, 1.2, 12]} />
+            <Material color={color} />
+          </mesh>
+
+          {/* Branching Out Line */}
+          <mesh position={[0.05, -0.3, 0]} rotation={[0, 0, -0.7]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.9, 12]} />
+            <Material color={color} />
+          </mesh>
+
+          {/* Merging Back Line */}
+          <mesh position={[0.05, 0.3, 0]} rotation={[0, 0, 0.7]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.9, 12]} />
+            <Material color={color} />
+          </mesh>
+        </group>
+      )
+
+    case 'cloud':
+      return (
+        <group>
+          {/* Center Main Body */}
+          <mesh position={[0, 0, 0]} rotation={[0.5, 0.2, 0]}>
+            <dodecahedronGeometry args={[0.5, 0]} />
+            <Material color={color} />
+          </mesh>
+          
+          {/* Left Puff */}
+          <mesh position={[-0.45, -0.1, 0.1]} rotation={[0.1, 0.8, 0.2]}>
+            <dodecahedronGeometry args={[0.35, 0]} />
+            <Material color={color} />
+          </mesh>
+          
+          {/* Right Puff */}
+          <mesh position={[0.45, -0.15, -0.1]} rotation={[-0.3, 0.5, 0.1]}>
+            <dodecahedronGeometry args={[0.3, 0]} />
+            <Material color={color} />
+          </mesh>
+          
+          {/* Top Puff */}
+          <mesh position={[0.15, 0.35, 0]} rotation={[0.4, -0.2, 0.5]}>
+            <dodecahedronGeometry args={[0.4, 0]} />
+            <Material color={color} />
+          </mesh>
+          
+          {/* Front/Bottom Puff */}
+          <mesh position={[-0.1, -0.2, 0.25]} rotation={[0.2, 0.4, -0.3]}>
+            <dodecahedronGeometry args={[0.3, 0]} />
+            <Material color={color} />
+          </mesh>
+        </group>
+      )
+
     case 'cubes':
       return (
         <group>
@@ -108,9 +186,12 @@ function Spinner({ speed, children }: { speed: number; children: ReactNode }) {
 export default function ProjectArtifact({
   project,
   className = '',
+  quality = 'high',
 }: {
   project: Project
   className?: string
+  /** 'low' caps DPR at 1 and disables AA — for the many small gallery tiles. */
+  quality?: 'high' | 'low'
 }) {
   const spec = ARTIFACTS[project.id] ?? DEFAULT_SPEC
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -130,9 +211,9 @@ export default function ProjectArtifact({
   return (
     <div ref={wrapRef} className={className}>
       <Canvas
-        dpr={[1, 1.5]}
+        dpr={quality === 'low' ? 1 : [1, 1.5]}
         frameloop={active ? 'always' : 'never'}
-        gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
+        gl={{ alpha: true, antialias: quality !== 'low', powerPreference: 'low-power' }}
         camera={{ position: [0, 0, 4.4], fov: 42 }}
       >
         <ambientLight intensity={0.6} />

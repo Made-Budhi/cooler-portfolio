@@ -226,11 +226,14 @@
     animation-play-state: paused;
   }
 
-  /* ----------------------- Gallery (drag strip) ----------------------- */
+  /* ----------------------- Gallery (curved reel) ---------------------- */
   .dg-viewport {
+    position: relative; /* offsetParent for the tiles' curve math */
     overflow: hidden;
     cursor: grab;
     touch-action: pan-y; /* vertical scrolls the page; horizontal we handle */
+    perspective: 1500px;
+    perspective-origin: 50% 50%;
   }
   .dg-viewport.is-dragging {
     cursor: grabbing;
@@ -238,56 +241,20 @@
   .dg-track {
     display: flex;
     width: max-content;
-    min-width: 100%;
+    transform-style: preserve-3d;
     will-change: transform;
     user-select: none;
   }
-  /* Only center when the tiles fit; left-align (correct drag range) when they overflow. */
-  .dg-track.is-centered {
-    justify-content: center;
-  }
+  /* Per-tile transform + opacity are written every frame (the curve); no CSS transition. */
   .dg-tile {
-    transition: opacity 0.45s var(--ease-out-expo);
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
   }
   .dg-tile img {
     -webkit-user-drag: none;
     user-select: none;
     pointer-events: none;
-  }
-  /* Dim the rest of the strip while one tile is hovered. */
-  @media (hover: hover) {
-    .dg-track:has(.dg-tile:hover) .dg-tile:not(:hover) {
-      opacity: 0.4;
-    }
-  }
-
-  /* Custom scrollbar for the drag strip. */
-  .dg-scrollbar {
-    position: relative;
-    height: 3px;
-    width: 100%;
-    border-radius: 999px;
-    background: color-mix(in oklab, var(--color-paper) 14%, transparent);
-    cursor: pointer;
-    touch-action: none;
-    transition: opacity 0.3s ease;
-  }
-  .dg-scrollbar[data-hidden='true'] {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .dg-thumb {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 30%;
-    border-radius: 999px;
-    background: color-mix(in oklab, var(--color-paper) 45%, transparent);
-    transition: background 0.3s ease;
-  }
-  .dg-scrollbar:hover .dg-thumb {
-    background: var(--color-accent);
   }
 
   /* -------------------------- Custom cursor --------------------------- */
