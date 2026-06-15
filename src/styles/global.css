@@ -1,0 +1,368 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Design tokens (Tailwind v4, CSS-first).
+ * These become utilities automatically: bg-paper, text-accent,
+ * font-display, font-mono, etc.
+ * ------------------------------------------------------------------ */
+@theme {
+  --color-paper: #e9e3d5;
+  --color-paper-2: #e3dcc9;
+  --color-ink: #18160f;
+  --color-ink-soft: #6a6456;
+  --color-accent: #e0501e;
+  --color-accent-2: #c63f12;
+  --color-night: #100e0a;
+  --color-night-2: #1b1812;
+
+  --font-display: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-sans: 'Fraunces', ui-serif, Georgia, serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+@layer base {
+  :root {
+    color-scheme: light;
+    scroll-padding-top: 6rem;
+  }
+
+  * {
+    border-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-weight: 400;
+    line-height: 1.5;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-paper);
+  }
+
+  /* Global scrollbar — themed to the paper/ink palette. */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-ink) 30%, transparent) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--color-ink) 28%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-accent);
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 500;
+    line-height: 1;
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Paper grain — subtle film over the whole page. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Components / patterns
+ * ------------------------------------------------------------------ */
+@layer components {
+  /* Small uppercase mono labels used throughout. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    line-height: 1;
+  }
+
+  .label-accent {
+    color: var(--color-accent);
+  }
+
+  /*
+   * Mask for the hero name's rise-in reveal. Clips vertically (so the line
+   * slides up from below) but NOT horizontally — the negative horizontal
+   * insets are width-relative, so the giant italic glyphs never get clipped on
+   * the right edge regardless of font size. Top is extended up for cap heights.
+   */
+  .hero-name-line {
+    clip-path: inset(-35% -100% 0% -100%);
+  }
+
+  /* Animated underline link. */
+  .link {
+    position: relative;
+    display: inline-block;
+  }
+  .link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.12em;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s var(--ease-out-expo);
+  }
+  .link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* Pill button. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.6rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--color-ink) 22%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: background-color 0.4s var(--ease-out-expo),
+      color 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo);
+  }
+  .btn:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    border-color: var(--color-ink);
+  }
+  .btn-accent {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-paper);
+  }
+  .btn-accent:hover {
+    background: var(--color-accent-2);
+    border-color: var(--color-accent-2);
+    color: var(--color-paper);
+  }
+
+  /* ------------------------------ Marquee ------------------------------ */
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    user-select: none;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 8%,
+      #000 92%,
+      transparent
+    );
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee--bleed {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .marquee__track {
+    display: flex;
+    flex: 0 0 auto;
+    width: max-content;
+    align-items: center;
+    will-change: transform;
+    animation: marquee-x var(--marquee-duration, 32s) linear infinite;
+    animation-direction: var(--marquee-direction, normal);
+  }
+  .marquee__group {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+  }
+  .marquee--pause:hover .marquee__track {
+    animation-play-state: paused;
+  }
+
+  /* ----------------------- Gallery (drag strip) ----------------------- */
+  .dg-viewport {
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y; /* vertical scrolls the page; horizontal we handle */
+  }
+  .dg-viewport.is-dragging {
+    cursor: grabbing;
+  }
+  .dg-track {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    will-change: transform;
+    user-select: none;
+  }
+  /* Only center when the tiles fit; left-align (correct drag range) when they overflow. */
+  .dg-track.is-centered {
+    justify-content: center;
+  }
+  .dg-tile {
+    transition: opacity 0.45s var(--ease-out-expo);
+  }
+  .dg-tile img {
+    -webkit-user-drag: none;
+    user-select: none;
+    pointer-events: none;
+  }
+  /* Dim the rest of the strip while one tile is hovered. */
+  @media (hover: hover) {
+    .dg-track:has(.dg-tile:hover) .dg-tile:not(:hover) {
+      opacity: 0.4;
+    }
+  }
+
+  /* Custom scrollbar for the drag strip. */
+  .dg-scrollbar {
+    position: relative;
+    height: 3px;
+    width: 100%;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-paper) 14%, transparent);
+    cursor: pointer;
+    touch-action: none;
+    transition: opacity 0.3s ease;
+  }
+  .dg-scrollbar[data-hidden='true'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dg-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 30%;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-paper) 45%, transparent);
+    transition: background 0.3s ease;
+  }
+  .dg-scrollbar:hover .dg-thumb {
+    background: var(--color-accent);
+  }
+
+  /* -------------------------- Custom cursor --------------------------- */
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50%;
+    mix-blend-mode: difference;
+  }
+  .cursor-dot {
+    width: 7px;
+    height: 7px;
+    background: #f4efe4;
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .cursor-ring {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #cfc7b6;
+    transform: translate3d(-50%, -50%, 0);
+    transition: width 0.3s var(--ease-out-expo), height 0.3s var(--ease-out-expo),
+      opacity 0.3s ease;
+  }
+  .cursor-ring[data-hover='true'] {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+@media (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Keyframes
+ * ------------------------------------------------------------------ */
+@keyframes marquee-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+.scroll-cue {
+  animation: scroll-cue 1.9s var(--ease-out-expo) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track {
+    animation-duration: 0s;
+  }
+  .scroll-cue {
+    animation: none;
+  }
+}
