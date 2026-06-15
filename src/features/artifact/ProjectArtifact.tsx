@@ -26,8 +26,9 @@ const ARTIFACTS: Record<string, ArtifactSpec> = {
   'auto-code-review': { shape: 'github-logo', color: '#6f8cff', speed: 0.4 },
   'private-cloud-service': { shape: 'ubuntu-logo', color: '#fb7a9a', speed: 0.1 },
   'bali-school-kids': { shape: 'torus', color: '#bf6bf0', speed: 0.5 },
-  'sidewi-bali': { shape: 'cubes', color: '#6fcfc6', speed: 0.4 },
+  'sidewi-bali': { shape: 'cubes', color: '##596B69', speed: 0.4 },
   'broom-project': { shape: 'roomgrid', color: '#f7b15a', speed: 0.35 },
+  'toorism': { shape: 'icosahedron', color: '#25CABE', speed: 0.4 },
 }
 
 const DEFAULT_SPEC: ArtifactSpec = { shape: 'icosahedron', color: '#e0501e', speed: 0.4 }
