@@ -6,7 +6,7 @@ import type { Group } from 'three'
 
 import type { Project } from '@/types'
 
-type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid' | 'git-tree' | 'cloud'
+type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid' | 'github-logo' | 'ubuntu-logo'
 
 interface ArtifactSpec {
   shape: ArtifactShape
@@ -23,8 +23,8 @@ interface ArtifactSpec {
  * - broom-project     → stacked boxes (rooms in a building)
  */
 const ARTIFACTS: Record<string, ArtifactSpec> = {
-  'auto-code-review': { shape: 'git-tree', color: '#6f8cff', speed: 0.4 },
-  'private-cloud-service': { shape: 'cloud', color: '#fb7a9a', speed: 0.1 },
+  'auto-code-review': { shape: 'github-logo', color: '#6f8cff', speed: 0.4 },
+  'private-cloud-service': { shape: 'ubuntu-logo', color: '#fb7a9a', speed: 0.1 },
   'bali-school-kids': { shape: 'torus', color: '#bf6bf0', speed: 0.5 },
   'sidewi-bali': { shape: 'cubes', color: '#6fcfc6', speed: 0.4 },
   'broom-project': { shape: 'roomgrid', color: '#f7b15a', speed: 0.35 },
@@ -38,82 +38,97 @@ function Material({ color }: { color: string }) {
 
 function Shape({ shape, color }: { shape: ArtifactShape; color: string }) {
   switch (shape) {
-    case 'git-tree':
+    case 'github-logo': {
       return (
         <group>
-          {/* Main Branch Base Commit */}
-          <mesh position={[-0.3, -0.6, 0]}>
-            <sphereGeometry args={[0.18, 24, 24]} />
-            <Material color={color} />
-          </mesh>
-          
-          {/* Main Branch Top Commit */}
-          <mesh position={[-0.3, 0.6, 0]}>
-            <sphereGeometry args={[0.18, 24, 24]} />
+          {/* The Outer Ring */}
+          <mesh>
+            <torusGeometry args={[1.1, 0.08, 16, 64]} />
             <Material color={color} />
           </mesh>
 
-          {/* Feature Branch (The "PR" Commit being reviewed) */}
-          <mesh position={[0.4, 0, 0]}>
-            <sphereGeometry args={[0.22, 24, 24]} />
-            {/* Using a bright contrasting metal for the "AI Review" node to make it pop */}
-            <meshStandardMaterial color="#ffffff" roughness={0.1} metalness={0.9} />
-          </mesh>
+          <group position={[0, -0.1, 0]}>
+            {/* The Head */}
+            <mesh position={[0, 0.3, 0]}>
+              {/* Flattened sphere for the face */}
+              <sphereGeometry args={[0.45, 32, 32]} />
+              <Material color={color} />
+            </mesh>
 
-          {/* Vertical Main Branch Line */}
-          <mesh position={[-0.3, 0, 0]}>
-            <cylinderGeometry args={[0.06, 0.06, 1.2, 12]} />
-            <Material color={color} />
-          </mesh>
+            {/* Left Ear */}
+            <mesh position={[-0.25, 0.7, 0]} rotation={[0, 0, 0.4]}>
+              <coneGeometry args={[0.15, 0.3, 16]} />
+              <Material color={color} />
+            </mesh>
 
-          {/* Branching Out Line */}
-          <mesh position={[0.05, -0.3, 0]} rotation={[0, 0, -0.7]}>
-            <cylinderGeometry args={[0.05, 0.05, 0.9, 12]} />
-            <Material color={color} />
-          </mesh>
+            {/* Right Ear */}
+            <mesh position={[0.25, 0.7, 0]} rotation={[0, 0, -0.4]}>
+              <coneGeometry args={[0.15, 0.3, 16]} />
+              <Material color={color} />
+            </mesh>
 
-          {/* Merging Back Line */}
-          <mesh position={[0.05, 0.3, 0]} rotation={[0, 0, 0.7]}>
-            <cylinderGeometry args={[0.05, 0.05, 0.9, 12]} />
-            <Material color={color} />
-          </mesh>
+            {/* The Body */}
+            <mesh position={[0, -0.4, 0]}>
+              {/* Tapered cylinder */}
+              <cylinderGeometry args={[0.25, 0.35, 0.7, 32]} />
+              <Material color={color} />
+            </mesh>
+
+            {/* The Tail */}
+            {/* Using a partial torus to create the swooping cat tail */}
+            <mesh position={[-0.45, -0.4, 0]} rotation={[0, 0, 0.8]}>
+              <torusGeometry args={[0.25, 0.08, 16, 32, Math.PI * 0.8]} />
+              <Material color={color} />
+            </mesh>
+          </group>
         </group>
-      )
+      );
+    }
+      
+    case 'ubuntu-logo': {
+      // Proportions for the "Circle of Friends"
+      const segments = 3;
+      const radius = 0.8; 
+      const tube = 0.18; 
+      const headRadius = 0.23; 
+      const headDistance = 1.02; // Pushes the heads slightly outside the main ring
+      
+      // Calculate arc lengths (120 degrees minus the gap for the head)
+      const gapAngle = 0.55; // Roughly 31 degrees of empty space
+      const arcLength = (Math.PI * 2) / 3 - gapAngle;
 
-    case 'cloud':
       return (
         <group>
-          {/* Center Main Body */}
-          <mesh position={[0, 0, 0]} rotation={[0.5, 0.2, 0]}>
-            <dodecahedronGeometry args={[0.5, 0]} />
-            <Material color={color} />
-          </mesh>
-          
-          {/* Left Puff */}
-          <mesh position={[-0.45, -0.1, 0.1]} rotation={[0.1, 0.8, 0.2]}>
-            <dodecahedronGeometry args={[0.35, 0]} />
-            <Material color={color} />
-          </mesh>
-          
-          {/* Right Puff */}
-          <mesh position={[0.45, -0.15, -0.1]} rotation={[-0.3, 0.5, 0.1]}>
-            <dodecahedronGeometry args={[0.3, 0]} />
-            <Material color={color} />
-          </mesh>
-          
-          {/* Top Puff */}
-          <mesh position={[0.15, 0.35, 0]} rotation={[0.4, -0.2, 0.5]}>
-            <dodecahedronGeometry args={[0.4, 0]} />
-            <Material color={color} />
-          </mesh>
-          
-          {/* Front/Bottom Puff */}
-          <mesh position={[-0.1, -0.2, 0.25]} rotation={[0.2, 0.4, -0.3]}>
-            <dodecahedronGeometry args={[0.3, 0]} />
-            <Material color={color} />
-          </mesh>
+          {Array.from({ length: segments }).map((_, i) => {
+            // Base angle for this third of the logo (0, 120, 240 degrees)
+            const baseAngle = i * ((Math.PI * 2) / 3);
+            
+            // Position the head precisely in the center of the gap
+            const headX = Math.cos(baseAngle) * headDistance;
+            const headY = Math.sin(baseAngle) * headDistance;
+            
+            // Start the arc right after the gap ends
+            const arcRotation = baseAngle + gapAngle / 2;
+
+            return (
+              <group key={i}>
+                {/* The "Head" */}
+                <mesh position={[headX, headY, 0]}>
+                  <sphereGeometry args={[headRadius, 24, 24]} />
+                  <Material color={color} />
+                </mesh>
+                
+                {/* The "Arm" */}
+                <mesh rotation={[0, 0, arcRotation]}>
+                  <torusGeometry args={[radius, tube, 16, 48, arcLength]} />
+                  <Material color={color} />
+                </mesh>
+              </group>
+            );
+          })}
         </group>
-      )
+      );
+    }
 
     case 'cubes':
       return (
@@ -147,21 +162,62 @@ function Shape({ shape, color }: { shape: ArtifactShape; color: string }) {
           <Material color={color} />
         </mesh>
       )
-    case 'roomgrid':
+    case 'roomgrid': {
+      // Custom material for "available" or "glass" rooms
+      const GlassMaterial = () => (
+        <meshStandardMaterial 
+          color="#ffffff" 
+          transparent={true} 
+          opacity={0.25} 
+          roughness={0.1} 
+          metalness={0.9} 
+        />
+      );
+
+      // We use slight gaps between the blocks (size is 0.7, spacing is 0.75) 
+      // to make them look like distinct, modular facility rooms.
       return (
-        <group>
-          {Array.from({ length: 6 }).map((_, i) => {
-            const x = (i % 2) * 0.86 - 0.43
-            const y = Math.floor(i / 2) * 0.62 - 0.62
-            return (
-              <mesh key={i} position={[x, y, 0]}>
-                <boxGeometry args={[0.72, 0.46, 0.5]} />
-                <Material color={color} />
-              </mesh>
-            )
-          })}
+        <group position={[0, -0.4, 0]}>
+          {/* Ground Floor (2x2 grid) */}
+          <mesh position={[-0.375, 0, -0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <Material color={color} />
+          </mesh>
+          <mesh position={[0.375, 0, -0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <GlassMaterial />
+          </mesh>
+          <mesh position={[-0.375, 0, 0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <GlassMaterial />
+          </mesh>
+          <mesh position={[0.375, 0, 0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <Material color={color} />
+          </mesh>
+
+          {/* Second Floor (L-Shape, leaving one block empty for a "terrace") */}
+          <mesh position={[-0.375, 0.55, -0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <GlassMaterial />
+          </mesh>
+          <mesh position={[0.375, 0.55, -0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <Material color={color} />
+          </mesh>
+          <mesh position={[-0.375, 0.55, 0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <Material color={color} />
+          </mesh>
+
+          {/* Third Floor (Top Office / Penthouse) */}
+          <mesh position={[-0.375, 1.1, -0.375]}>
+            <boxGeometry args={[0.7, 0.5, 0.7]} />
+            <Material color={color} />
+          </mesh>
         </group>
-      )
+      );
+    }
     case 'icosahedron':
     default:
       return (
