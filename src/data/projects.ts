@@ -17,7 +17,7 @@ export const projects: Project[] = [
     role: 'Personal Project',
     tagline:
       'An AI-powered GitHub App that acts as an automated first line of defense for code security, using a fine-tuned Llama-3.1 model.',
-    tools: ['Python', 'Flask', 'Llama-3.1 8B', 'Unsloth (QLoRA)', 'GitHub Apps API', 'MySQL', 'Streamlit'],
+    tools: ['Python', 'Flask', 'Llama-3.1 8B', 'Unsloth (QLoRA)', 'GitHub Apps',  'Github REST API','MySQL', 'Streamlit'],
     overview:
       'Code reviews are a critical part of the software development lifecycle, but they often create bottlenecks and are prone to human error when reviewers are fatigued. To solve this, I built an end-to-end automated Pull Request review system integrated directly into GitHub. Using a fine-tuned Llama-3.1-8B-Instruct model hosted via Ollama, the system acts as a strict, automated security engineer. It scans incoming git diffs, detects vulnerabilities, and leaves precise line-by-line comments on the PR, drastically reducing the manual review burden while maintaining a high recall rate for security flaws.',
     sections: [
@@ -120,7 +120,7 @@ export const projects: Project[] = [
     sections: [
       {
         heading: 'Project Background & Team Structure',
-        body: 'Developed under the guidance of our Project Manager, Ir. Gde Brahupadhya Subiksa, S.Kom., M.T., IPM. The project required coordinating across different teams to design a scalable platform capable of handling diverse tourism data.',
+        body: 'Developed as a campus project-based lerning initiative. The project required coordinating across different teams to design a scalable platform capable of handling diverse tourism data.',
       },
       {
         heading: 'Tech Stack Evolution: Pivoting to Laravel',
@@ -172,23 +172,23 @@ export const projects: Project[] = [
     role: 'Team Lead & Frontend Developer',
     tagline: "An open-source, real-time map and routing application for navigating Bali and beyond.",
     tools: ['NuxtJS', 'Go Fiber', 'MySQL', 'OSRM API', 'Geolocator'],
-    overview: "Toorism is a feature-rich mobile map application built during a fast-paced hackathon. Designed as an open-source alternative to proprietary mapping SDKs, it empowers users to view their real-time location, drop pins via search or touch, and dynamically generate navigation routes. Centered initially around Kuta Selatan, Bali, the app demonstrates how to combine free open-source data with professional-grade software architecture.",
+    overview: "Toorism is a feature-rich web mapping application built during a fast-paced hackathon. Designed as a comprehensive travel companion, it empowers users with interactive maps, destination suggestions, and route planning, while uniquely tracking the CO<sub>2</sub> impact of their trips. The frontend is powered by a highly scalable Nuxt architecture, communicating seamlessly with a robust Go backend.",
     sections: [
       {
-      heading: "The Challenge: Breaking Free from Proprietary Maps",
-      body: "The primary goal was to build a 'Google Maps clone' without relying on expensive, locked-down SDKs. We needed a highly interactive, stateful map where users could freely pan, search for destinations, and get directions, all while a background service accurately tracked their device's GPS coordinates in real-time."
+        heading: "Architecting for Scale in Nuxt",
+        body: "Map applications can quickly turn into a tangled mess of UI components and background streams. To prevent this, Toorism was built using Nuxt's powerful directory structure to enforce separation of concerns. We organized the codebase into distinct feature modules, including `map`, `destination`, and `onboarding`. Complex domain logic was abstracted into pure Vue Composables (like `useDashboardData.ts` and `useAuth.ts`), while state management was centralized in dedicated store files like `map.store.ts` and `auth.store.ts`."
       },
       {
-        heading: "Architecting for Scale",
-        body: "Map applications can quickly turn into a tangled mess of UI and background streams. To prevent this, Toorism was built using a strict Feature-First Layered Architecture. By completely separating the Presentation layer (Flutter UI) from the Data and Domain layers, we ensured that complex logic—like native OS location permission requests and API fetching—never polluted the UI. Riverpod was implemented to manage the state globally, allowing the map to react instantly to user searches and route updates without deeply nested StatefulWidgets."
+        heading: "Interactive Mapping & Route Planning",
+        body: "The core of the application relies on an interactive map component (`InteractiveMap.vue`) powered by Leaflet under the hood, managed via the `useLeafletMap.ts` composable. Users can interact with map overlay navbars (`MapOverlayNavbar.vue`) and location chips (`MapLocationChip.vue`) to seamlessly navigate the UI. A dedicated `useRoutePlanner.ts` composable handles the pathfinding logic, while a responsive `MapBottomSheet.vue` provides an intuitive, mobile-friendly interface for destination details."
       },
       {
-        heading: "Real-Time Tracking & Interactive UI",
-        body: "Using the Geolocator and flutter_map_location_marker packages, the app hooks directly into native Android and iOS hardware streams to paint the user's location on the screen. We engineered the UX to mimic top-tier navigation apps: tapping anywhere on the map dynamically updates the Riverpod state, places a marker, and triggers a sleek bottom-sheet modal revealing the destination's coordinates and an action button for routing."
+        heading: "Destination Discovery & Social Proof",
+        body: "Toorism goes beyond simple A-to-B navigation by offering a rich destination discovery experience. The app features dedicated components for showcasing nearby destinations (`NearbyDestinationCard.vue`) and detailed point-of-interest views (`DestinationDetailCard.vue`). To build trust, we integrated user reviews directly into the platform, leveraging composables like `useDestinationReviews.ts` alongside UI elements like `ReviewCard.vue`."
       },
       {
-        heading: "Open Source Routing Machine (OSRM)",
-        body: "A map isn't much use without roads. Instead of just drawing straight lines between two points, Toorism taps into the Open Source Routing Machine (OSRM) API. When a user requests directions, the app's Data layer calculates the physical road path from their current GPS ping to the dropped pin, returning a complex GeoJSON array that our UI instantly renders as a thick, navigable polyline."
+        heading: "Eco-Conscious User Dashboard & Authentication",
+        body: "A standout feature of Toorism is its focus on sustainability. The user dashboard (`dashboard.vue`) provides a comprehensive `TripSummary.vue`, but more importantly, it includes a `Co2Summary.vue` component. This allows users to actively monitor the environmental footprint of their planned routes. Access to this dashboard is protected by custom middleware (`dashboard-auth.ts`) and features a seamless Google OAuth login flow (`google/popup-callback.vue`)."
       }
     ],
     accent: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',

@@ -3,7 +3,7 @@ import type { SkillGroup } from '@/types'
 export const skillGroups: SkillGroup[] = [
   {
     label: 'Languages',
-    items: ['TypeScript', 'Python', 'PHP', 'Java'],
+    items: ['TypeScript', 'JavaScript', 'Python', 'PHP', 'Java'],
   },
   {
     label: 'Frameworks & Libraries',
@@ -11,7 +11,7 @@ export const skillGroups: SkillGroup[] = [
   },
   {
     label: 'Tools & Platforms',
-    items: ['Git', 'GitHub', 'Docker', 'MySQL', 'Supabase', 'Figma', 'Jira', 'Trello'],
+    items: ['Git', 'GitHub', 'Docker', 'MySQL', 'Supabase', 'Figma', 'Jira', 'Confluence'],
   },
   {
     label: 'Practices',

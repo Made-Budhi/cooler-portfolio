@@ -9,17 +9,16 @@ export function About() {
   return (
     <section id="about" className="bg-paper-2">
       <div className="mx-auto max-w-[1640px] px-5 py-24 md:px-10 md:py-32">
-        <SectionHeading index="03" label="About">
-          Engineer across
-          <br />
-          the <em>whole stack.</em>
-        </SectionHeading>
-
-        <div className="mt-16 grid gap-12 md:mt-20 md:grid-cols-12">
-          {/* Statement + summary */}
+        <div className="grid gap-12 md:grid-cols-12">
+          {/* Title + statement + summary */}
           <div className="md:col-span-7">
+            <SectionHeading index="03" label="About">
+              Engineer across
+              <br />
+              the <em>whole stack.</em>
+            </SectionHeading>
             <Reveal>
-              <p className="max-w-2xl font-display text-2xl leading-snug md:text-3xl">
+              <p className="mt-12 max-w-2xl font-display text-2xl leading-snug md:text-3xl">
                 {profile.statement}
               </p>
             </Reveal>
@@ -45,13 +44,23 @@ export function About() {
           {/* Card + education + recognition */}
           <div className="space-y-12 md:col-span-5 md:col-start-8">
             <Reveal>
-              <div className="rounded-2xl border border-ink/12 bg-paper p-6">
-                <div className="flex items-center justify-between label">
-                  <span>{profile.locationShort}</span>
-                  <span>{profile.role}</span>
+              <div className="overflow-hidden rounded-2xl border border-ink/12 bg-paper p-3">
+                <img
+                  src="/budhi-profile.webp"
+                  alt={`Portrait of ${profile.fullName}`}
+                  loading="lazy"
+                  className="aspect-[4/5] w-full object-cover rounded-lg"
+                />
+                <div className="p-6">
+                  <div className="flex items-center justify-between label">
+                    <span>{profile.locationShort}</span>
+                    <span>{profile.role}</span>
+                  </div>
+                  <div className="mt-4 font-display text-4xl font-medium italic leading-none text-accent">
+                    {profile.nickname}
+                  </div>
+                  <div className="mt-2 font-display text-xl leading-tight">{profile.fullName}</div>
                 </div>
-                <div className="mt-10 font-display text-7xl font-medium italic text-accent">{profile.nickname}</div>
-                <div className="mt-3 font-display text-2xl leading-tight">{profile.fullName}</div>
               </div>
             </Reveal>
 

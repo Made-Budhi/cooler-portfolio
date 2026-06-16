@@ -8,7 +8,7 @@ export function Work() {
     <section id="work" className="mx-auto max-w-[1640px] px-5 py-24 md:px-10 md:py-32">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <SectionHeading index="01" label="Selected Work">
-          Two builds,
+          Featured projects,
           <br />
           <em>start to finish.</em>
         </SectionHeading>

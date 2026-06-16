@@ -21,11 +21,11 @@ export const profile = {
   previousSite: 'https://portfolio-cool-seven.vercel.app/',
 
   /** Small two-line tagline near the hero. */
-  taglineTop: ['Full-stack software', 'for ambitious products.'],
+  taglineTop: ['Efficiency first.', 'Always.'],
 
   /** Big statement used in the about intro. */
   statement:
-    'I build calm, reliable software — from the interface a person touches down to the systems and services behind it.',
+    'I build reliable software — from the interface a person touches down to the systems and services behind it.',
 
   summary:
     'Software engineering student with experience in full-stack web development, system analysis, and software project leadership. I work comfortably across the frontend and backend to ship web applications, and I like leading small teams from prototype to production.',
@@ -38,7 +38,7 @@ export const profile = {
 
   years: '2022 — 2026',
   status: 'OPEN TO WORK — 2026',
-  availability: 'Available for new work',
+  availability: 'Open to work',
 
   email: 'madebudhi15@gmail.com',
 

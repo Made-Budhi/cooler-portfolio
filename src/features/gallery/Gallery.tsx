@@ -219,7 +219,7 @@ export function Gallery() {
           </h2>
         </div>
         <p className="max-w-xs leading-relaxed text-paper/55 md:text-right">
-          An endless, curved reel — drag, fling, or scroll sideways. Tap any project for the full
+          An endless gallery of my work — drag or scroll sideways. Tap any project for the full
           case study.
         </p>
       </div>

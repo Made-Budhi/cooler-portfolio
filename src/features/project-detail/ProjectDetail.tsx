@@ -195,9 +195,7 @@ export function ProjectDetail({ project, rect, onClose }: ProjectDetailProps) {
           </div>
         </div>
 
-        <p className="mt-14 max-w-3xl font-display text-2xl leading-snug md:text-[2rem]">
-          {project.overview}
-        </p>
+        <p className="mt-14 max-w-3xl font-display text-2xl leading-snug md:text-[2rem]" dangerouslySetInnerHTML={{ __html: project.overview }} />
 
         <div className="mt-16 space-y-14 md:mt-20">
           {project.sections.map((section, i) => (
