@@ -5,8 +5,9 @@ import type { ReactNode } from 'react'
 import type { Group } from 'three'
 
 import type { Project } from '@/types'
+import { group } from 'node:console'
 
-type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid' | 'github-logo' | 'ubuntu-logo'
+type ArtifactShape = 'icosahedron' | 'cubes' | 'torus' | 'dodecahedron' | 'roomgrid' | 'github-logo' | 'ubuntu-logo' | 'rindix'
 
 interface ArtifactSpec {
   shape: ArtifactShape
@@ -29,6 +30,7 @@ const ARTIFACTS: Record<string, ArtifactSpec> = {
   'sidewi-bali': { shape: 'cubes', color: '##596B69', speed: 0.4 },
   'broom-project': { shape: 'roomgrid', color: '#f7b15a', speed: 0.35 },
   'toorism': { shape: 'icosahedron', color: '#25CABE', speed: 0.4 },
+  'rindix': { shape: 'rindix', color: '#e0501e', speed: 0.1},
 }
 
 const DEFAULT_SPEC: ArtifactSpec = { shape: 'icosahedron', color: '#e0501e', speed: 0.4 }
@@ -39,6 +41,33 @@ function Material({ color }: { color: string }) {
 
 function Shape({ shape, color }: { shape: ArtifactShape; color: string }) {
   switch (shape) {
+    case 'rindix': {
+      return (
+        <group>
+          {/* 1. Gong Body */}
+          <group>
+            {/* Outer Rim */}
+            <mesh>
+              <torusGeometry args={[0.9, 0.08, 16, 64]} />
+              <Material color={color} />
+            </mesh>
+
+            {/* Resonant Plate */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.88, 0.88, 0.02, 64]} />
+              <Material color={color} />
+            </mesh>
+
+            {/* Central Boss */}
+            <mesh position={[0, 0, 0.01]} scale={[1, 1, 0.5]}>
+              <sphereGeometry args={[0.2, 32, 32]} />
+              <Material color={color} />
+            </mesh>
+          </group>
+        </group>
+      );
+    }
+
     case 'github-logo': {
       return (
         <group>

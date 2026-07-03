@@ -40,10 +40,45 @@ export const projects: Project[] = [
     ],
     accent: 'linear-gradient(120deg, #0d1117 0%, #1f6feb 50%, #8957e5 100%)',
     featured: true,
+  }, 
+  {
+    id: "rindix",
+    index: "02",
+    title: "RindiX",
+    category: "Hackathon Project",
+    year: "2026",
+    role: "Lead Developer",
+    tagline: "An AI-powered interactive web app for sustainable cultural preservation.",
+    tools: [
+      "Google Gemini API",
+      "React",
+      "Web Audio API",
+    ],
+    overview: "Visitors to museums often see beautiful traditional Balinese Gamelan instruments behind glass, unable to touch them or hear their magical sound due to conservation rules. RindiX solves this by allowing users to scan a physical instrument with their smartphone camera, instantly transforming their screen into a playable digital replica.",
+    sections: [
+      {
+        heading: "The Challenge: Untouchable Heritage",
+        body: "Cultural tourism in Bali faces a paradox: how do you share the interactive, auditory essence of traditional instruments like the Gamelan without subjecting historical artifacts to physical wear and tear? Current solutions rely on passive text plaques, completely stripping away the interactive musical experience that defines Balinese heritage."
+      },
+      {
+        heading: "The Solution: Snap, Analyze, and Play",
+        body: "Built over a 6-hour sprint at the Bali AI Innovation Hackathon, RindiX bridges this gap. We designed a web-based platform where a user simply snaps a photo of a 'do-not-touch' instrument. The app analyzes the image, identifies the specific instrument (e.g., Gong, Rindik, Suling), and instantly loads a multi-touch, zero-latency digital replica on their screen, complete with AI-generated cultural trivia."
+      },
+      {
+        heading: "Technical Implementation",
+        body: "To meet the aggressive hackathon timeline without sacrificing accuracy, we pivoted from training a custom YOLO model to utilizing the Google Gemini Vision API. By engineering a highly specific system prompt, Gemini processes the camera feed to extract the exact instrument ID. The frontend, built with React and the Web Audio API, catches this ID and dynamically maps pre-recorded, high-quality .wav samples to a multi-touch canvas, ensuring a responsive, zero-delay playing experience."
+      },
+      {
+        heading: "Traction & Next Steps",
+        body: "The project was awarded 1st Place for the MVP. More importantly, it caught the attention of local stakeholders, including the Head of Sustainability at PT. Bali Turtle Island Development. We are currently exploring opportunities to pilot RindiX in local museum exhibits, modernizing how tourists interact with our heritage while maintaining strict conservation standards."
+      }
+    ],
+    accent: "linear-gradient(135deg, #d97706 0%, #78350f 100%)", // Warm bronze/gold gradient
+    featured: true
   },
   {
     id: 'private-cloud-service',
-    index: '02',
+    index: '03',
     title: 'Dockerized Private Cloud Storage Service',
     category: 'Cloud Engineering & DevOps',
     year: '2026',
@@ -79,7 +114,7 @@ export const projects: Project[] = [
   },
   {
     id: 'bali-school-kids',
-    index: '03',
+    index: '04',
     title: 'Bali School Kids',
     category: 'Web Development',
     year: '2025',
@@ -107,7 +142,7 @@ export const projects: Project[] = [
   },
   {
     id: 'sidewi-bali',
-    index: '04',
+    index: '05',
     title: 'Sidewi Bali',
     category: 'Web Development',
     year: '2024',
@@ -136,7 +171,7 @@ export const projects: Project[] = [
   },
   {
     id: 'broom-project',
-    index: '05',
+    index: '06',
     title: 'BRoom Project',
     category: 'Web Development',
     year: '2023',
@@ -165,7 +200,7 @@ export const projects: Project[] = [
   },
   {
     id: 'toorism',
-    index: '06',
+    index: '07',
     title: 'Toorism Project',
     category: 'Hackathon Project',
     year: '2026',
