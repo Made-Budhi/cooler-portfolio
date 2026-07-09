@@ -110,7 +110,7 @@ export const projects: Project[] = [
       },
     ],
     accent: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    featured: true,
+    featured: false,
   },
   {
     id: 'bali-school-kids',
