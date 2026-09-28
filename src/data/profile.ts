@@ -17,8 +17,8 @@ export const profile = {
   roleLabel: 'Software Engineer · Full-stack Developer',
 
   /** Downloadable CV (served from /public) and the previous portfolio site. */
-  cvUrl: '/Made-Budhi-CV.pdf',
-  previousSite: 'https://portfolio-cool-seven.vercel.app/',
+  cvUrl: '/I_Made_Bagus_Mahatma_Budhi_CV.pdf',
+  // previousSite: 'https://portfolio-cool-seven.vercel.app/',
 
   /** Small two-line tagline near the hero. */
   taglineTop: ['Efficiency first.', 'Always.'],

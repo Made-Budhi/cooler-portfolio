@@ -68,15 +68,6 @@ export function Hero() {
               >
                 View CV <span aria-hidden>↗</span>
               </a>
-              <a
-                href={profile.previousSite}
-                target="_blank"
-                rel="noreferrer"
-                data-hover
-                className="btn"
-              >
-                Previous site <span aria-hidden>↗</span>
-              </a>
             </motion.div>
           </div>
 
